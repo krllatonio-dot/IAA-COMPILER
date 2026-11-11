@@ -94,7 +94,6 @@ if __name__ == "__main__":
     
     extracted_logic = extract_axioms_from_prompt(sample_target_prompt)
     compile_and_solve_z3(extracted_logic)
-
     # Exclude ALL rule consequent variables, not just the final rule's target
     output_vars = {r["then_var"] for r in logic_schema["rules"]}
     input_vars = [v for v in logic_schema["variables"] if v not in output_vars]
