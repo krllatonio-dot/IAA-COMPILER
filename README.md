@@ -9,8 +9,7 @@ Traditional AI red-teaming relies on stochastic prompt fuzzing and high-compute 
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com
-   cd iaa-logic-compiler
+   git clone https://github.com/krllatonio-dot/IAA-COMPILER
    ```
 
 2. **Install dependencies:**
@@ -20,7 +19,7 @@ Traditional AI red-teaming relies on stochastic prompt fuzzing and high-compute 
 
 3. **Run the Phase 1 Compiler:**
    ```bash
-   python iaa_compiler.py
+   python iaa_neuro_compiler.py
    ```
 
 ## Citation
