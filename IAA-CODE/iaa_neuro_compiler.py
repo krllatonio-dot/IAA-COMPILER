@@ -1,6 +1,6 @@
 import json
 import os
-from z3 import *
+from z3 import And, Bool, Implies, Not, Solver, unsat
 from openai import OpenAI
 
 # Configure client (Works with local Ollama: base_url="http://localhost:11434/v1", api_key="ollama")
@@ -42,9 +42,11 @@ def extract_axioms_from_prompt(system_prompt: str) -> dict:
         temperature=0.0
     )
     raw_json = response.choices[0].message.content.strip()
+    
     # Clean markdown code fences if present
     if raw_json.startswith("```"):
         raw_json = raw_json.strip("`").replace("json\n", "", 1).strip()
+        
     return json.loads(raw_json)
 
 def compile_and_solve_z3(logic_schema: dict):
@@ -65,9 +67,12 @@ def compile_and_solve_z3(logic_schema: dict):
         solver.add(formula)
         print(f"    {rule['name']}: {formula}")
 
-    # Test all combinations of input conditions to find where rules violently collide (UNSAT)
+    # Test combinations of input conditions to find where rules collide (UNSAT)
     print("\n[*] Scanning Operational Boundary Vector (Λ) for Contradictions...")
-    input_vars = [v for v in logic_schema["variables"] if v != logic_schema["rules"][-1]["then_var"]]
+    
+    # Exclude ALL rule consequent variables, not just the final rule's target
+    output_vars = {r["then_var"] for r in logic_schema["rules"]}
+    input_vars = [v for v in logic_schema["variables"] if v not in output_vars]
     
     # Check extreme stress state where all trigger conditions are simultaneously active
     solver.push()
@@ -94,6 +99,3 @@ if __name__ == "__main__":
     
     extracted_logic = extract_axioms_from_prompt(sample_target_prompt)
     compile_and_solve_z3(extracted_logic)
-    # Exclude ALL rule consequent variables, not just the final rule's target
-    output_vars = {r["then_var"] for r in logic_schema["rules"]}
-    input_vars = [v for v in logic_schema["variables"] if v not in output_vars]
