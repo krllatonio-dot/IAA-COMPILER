@@ -1,9 +1,9 @@
 import time
-from z3 import *
+from z3 import Bool, Implies, Not, Solver
 
 def run_scaling_stress_test():
     print("=== IAA SYMBOLIC BOUNDARY & SCALING STRESS TEST ===\n")
-    for num_rules in [5, 25, 50, 100, 250]:
+    for num_rules in:
         # Create N symbolic state variables
         vars_list = [Bool(f"State_{i}") for i in range(num_rules)]
         solver = Solver()
