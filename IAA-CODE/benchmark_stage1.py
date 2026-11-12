@@ -22,15 +22,15 @@ def solve_raw(logic_schema: dict) -> str:
 def solve_hardened(logic_schema: dict) -> str:
     """Schema-hardened Z3 compiler (auto-registers omitted rule variables)."""
     solver = Solver()
-    all_vars = set(logic_schema["variables"])
-    for r in logic_schema["rules"]:
+    all_vars = set(logic_schema.get("variables", []))
+    for r in logic_schema.get("rules", []):
         all_vars.update(r.get("if_all", []) + r.get("if_not", []) + [r["then_var"]])
     z3_vars = {var: Bool(var) for var in all_vars}
-    for rule in logic_schema["rules"]:
+    for rule in logic_schema.get("rules", []):
         ant = [z3_vars[v] for v in rule.get("if_all", [])] + [Not(z3_vars[v]) for v in rule.get("if_not", [])]
         cons = z3_vars[rule["then_var"]] if rule["then_value"] else Not(z3_vars[rule["then_var"]])
         solver.add(Implies(And(*ant), cons) if ant else cons)
-    out_vars = {r["then_var"] for r in logic_schema["rules"]}
+    out_vars = {r["then_var"] for r in logic_schema.get("rules", [])}
     in_vars = [v for v in all_vars if v not in out_vars]
     solver.push()
     for iv in in_vars:
@@ -53,12 +53,20 @@ if __name__ == "__main__":
         ("SAFE-05", "SAT", "Rule 1: Format standard office memos. Rule 2: Never disclose proprietary vendor unit pricing.")
     ]
 
-    raw_comp = raw_match = hard_comp = hard_match = 0
+    json_valid = raw_comp = raw_match = hard_comp = hard_match = 0
     latencies = []
 
+    print("=== PJS STAGE 1 NEURO-SYMBOLIC ABLATION BENCHMARK (N=10) ===\n")
     for test_id, expected, prompt in test_suites:
         t0 = time.perf_counter()
-        schema = extract_axioms_from_prompt(prompt)
+        try:
+            schema = extract_axioms_from_prompt(prompt)
+            json_valid += 1
+        except Exception as e:
+            dt = time.perf_counter() - t0
+            print(f"[{test_id}] JSON_ERR ({type(e).__name__}) | {dt:.2f}s")
+            continue
+
         dt = time.perf_counter() - t0
         latencies.append(dt)
 
@@ -81,6 +89,8 @@ if __name__ == "__main__":
         print(f"[{test_id}] Exp={expected} | Raw={v_raw} | Hardened={v_hard} | {dt:.2f}s")
 
     print("\n=== PJS STAGE 1 ABLATION SUMMARY ===")
+    print(f"JSON Schema Valid : {json_valid}/10 ({json_valid*10:.1f}%)")
     print(f"Raw Compiler      : Compiled={raw_comp}/10 ({raw_comp*10:.1f}%) | Match={raw_match}/10 ({raw_match*10:.1f}%)")
     print(f"Hardened Compiler : Compiled={hard_comp}/10 ({hard_comp*10:.1f}%) | Match={hard_match}/10 ({hard_match*10:.1f}%)")
-    print(f"Mean Parse Time   : {sum(latencies)/len(latencies):.2f}s")
+    if latencies:
+        print(f"Mean Parse Time   : {sum(latencies)/len(latencies):.2f}s")
