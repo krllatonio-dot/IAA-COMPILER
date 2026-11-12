@@ -1,6 +1,6 @@
 import time
 from z3 import And, Bool, Implies, Not, Solver, unsat
-from neuro_compiler import extract_axioms_from_prompt
+from iaa_neuro_compiler import extract_axioms_from_prompt
 
 def solve_raw(logic_schema: dict) -> str:
     """Original strict Z3 compiler (requires all rule variables in 'variables')."""
