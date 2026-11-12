@@ -18,7 +18,7 @@ def run_scaling_stress_test():
         # Inject Axiomatic Invariant trigger (I x C): State_0 == True
         solver.add(vars_list[0] == True)
 
-        # Measure execution time across 50 runs
+        # Measure execution time across 50 runs (1 cold-start + 49 incremental checks)
         times_ms = []
         for _ in range(50):
             t0 = time.perf_counter()
